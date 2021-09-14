@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <string>
 #include <typeinfo>
 //#include "Deque.hpp"
+
+using namespace std;
 
 struct MyClass {
     int id;
@@ -14,10 +17,18 @@ struct MyClass {
 struct Deque_MyClass {                                                         
 	size_t siz;
     MyClass *data;                                                            
+	//const char *type_name;
     MyClass &(*at)(Deque_MyClass *, int i);                                          
+	MyClass &(*front)(Deque_MyClass *);                                          
+	MyClass &(*back)(Deque_MyClass *);                                          
     void (*dtor)(Deque_MyClass *);                                            
+	void (*clear)(Deque_MyClass *);
+	void (*push_back)(Deque_MyClass *, MyClass obj);
+	void (*push_front)(Deque_MyClass *, MyClass obj);
+	void (*pop_back)(Deque_MyClass *);
+	void (*pop_front)(Deque_MyClass *);
 	size_t &(*size)(Deque_MyClass *);
-	bool &(*empty)(Deque_MyClass *);
+	bool (*empty)(Deque_MyClass *);
 };                                                                         
 
 struct Deque_MyClass_Iterator{											   																			   
@@ -45,23 +56,52 @@ MyClass_print(const MyClass *o) {
 MyClass &Deque_MyClass_at(Deque_MyClass *ap, int i) {                                  
     return ap->data[i];                                                    
 }                                                                          
+MyClass &Deque_MyClass_front(Deque_MyClass *ap) {                                  
+
+} 
+MyClass &Deque_MyClass_back(Deque_MyClass *ap) {                                  
+
+} 
 void Deque_MyClass_dtor(Deque_MyClass *ap) {                                   
     free(ap);                                                              
 }                                                                          
+void Deque_MyClass_clear(Deque_MyClass *ap){
+
+}
+void Deque_MyClass_push_back(Deque_MyClass *ap, MyClass obj){
+
+}
+void Deque_MyClass_push_front(Deque_MyClass *ap, MyClass obj){
+
+}
+void Deque_MyClass_pop_back(Deque_MyClass *ap){
+
+}
+void Deque_MyClass_pop_front(Deque_MyClass *ap){
+
+}
 size_t &Deque_MyClass_size(Deque_MyClass *ap){
 	return ap->siz;
 }
-bool &Deque_MyClass_empty(Deque_MyClass *ap){
+bool Deque_MyClass_empty(Deque_MyClass *ap){
 	return ap->siz == 0;
 }
 void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {                                             
 	
     //ptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));               
     ptr->at = &Deque_MyClass_at;                                              
+	ptr->front = &Deque_MyClass_front;
+	ptr->back = &Deque_MyClass_back;
     ptr->dtor = &Deque_MyClass_dtor;                                       
 	ptr->size = &Deque_MyClass_size;
-	ptr->empty = &Deque_MyClass_empty;
+	ptr->empty = Deque_MyClass_empty;
+	ptr->push_back = Deque_MyClass_push_back;
+	ptr->push_front = Deque_MyClass_push_front;
+	ptr->pop_back = Deque_MyClass_pop_back;
+	ptr->pop_front = Deque_MyClass_pop_front;
+	ptr->clear = Deque_MyClass_clear;
 	ptr->siz = 0;
+	//ptr->type_name = "Deque_MyClass";
 	ptr->data = (MyClass *) malloc(sizeof(MyClass));
 }
 
@@ -77,7 +117,6 @@ int main() {
 
 	Deque_MyClass deq;
     Deque_MyClass_ctor(&deq, MyClass_less_by_id);
-	printf("Hi.\n");
 
     assert(deq.size(&deq) == 0);
     // size() should return a size_t.
@@ -88,7 +127,7 @@ int main() {
     /*printf("---- %s, %d\n", deq.type_name, (int) sizeof(deq.type_name));
     // std::cout << "---- " << deq.type_name << ", " << sizeof(deq.type_name) << std::endl;
     assert(sizeof deq.type_name == 14);
-
+	
     deq.push_back(&deq, MyClass{1, "Joe"});
     deq.push_back(&deq, MyClass{2, "Mary"});
     deq.push_back(&deq, MyClass{3, "Tom"});
