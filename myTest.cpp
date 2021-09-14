@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <typeinfo>
 //#include "Deque.hpp"
 
 struct MyClass {
@@ -11,10 +12,12 @@ struct MyClass {
 
 
 struct Deque_MyClass {                                                         
-	size_t size;
+	size_t siz;
     MyClass *data;                                                            
     MyClass &(*at)(Deque_MyClass *, int i);                                          
     void (*dtor)(Deque_MyClass *);                                            
+	size_t &(*size)(Deque_MyClass *);
+	bool &(*empty)(Deque_MyClass *);
 };                                                                         
 
 struct Deque_MyClass_Iterator{											   																			   
@@ -45,12 +48,20 @@ MyClass &Deque_MyClass_at(Deque_MyClass *ap, int i) {
 void Deque_MyClass_dtor(Deque_MyClass *ap) {                                   
     free(ap);                                                              
 }                                                                          
+size_t &Deque_MyClass_size(Deque_MyClass *ap){
+	return ap->siz;
+}
+bool &Deque_MyClass_empty(Deque_MyClass *ap){
+	return ap->siz == 0;
+}
 void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {                                             
 	
-    ptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));               
+    //ptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));               
     ptr->at = &Deque_MyClass_at;                                              
     ptr->dtor = &Deque_MyClass_dtor;                                       
-	ptr->size = 0;
+	ptr->size = &Deque_MyClass_size;
+	ptr->empty = &Deque_MyClass_empty;
+	ptr->siz = 0;
 	ptr->data = (MyClass *) malloc(sizeof(MyClass));
 }
 
@@ -68,13 +79,13 @@ int main() {
     Deque_MyClass_ctor(&deq, MyClass_less_by_id);
 	printf("Hi.\n");
 
-    /*assert(deq.size(&deq) == 0);
+    assert(deq.size(&deq) == 0);
     // size() should return a size_t.
     assert(typeid(std::size_t) == typeid(decltype(deq.size(&deq))));
     assert(deq.empty(&deq));
 
     // Should print "---- Deque_MyClass, 14".
-    printf("---- %s, %d\n", deq.type_name, (int) sizeof(deq.type_name));
+    /*printf("---- %s, %d\n", deq.type_name, (int) sizeof(deq.type_name));
     // std::cout << "---- " << deq.type_name << ", " << sizeof(deq.type_name) << std::endl;
     assert(sizeof deq.type_name == 14);
 
@@ -104,7 +115,7 @@ int main() {
     }*/
 	//deq.clear(&deq);
 
-    //deq.dtor(&deq);
+    deq.dtor(&deq);
 
 
 }
