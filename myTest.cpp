@@ -17,6 +17,9 @@ struct MyClass {
 struct Deque_MyClass {                                                         
 	size_t siz;
     MyClass *data;                                                            
+	int qsz;
+	int head;
+	int tail;
 	//const char *type_name;
     MyClass &(*at)(Deque_MyClass *, int i);                                          
 	MyClass &(*front)(Deque_MyClass *);                                          
@@ -69,10 +72,16 @@ void Deque_MyClass_clear(Deque_MyClass *ap){
 
 }
 void Deque_MyClass_push_back(Deque_MyClass *ap, MyClass obj){
+	if(ap->siz == ap->qsiz){
+		//q full
+	}
 
 }
 void Deque_MyClass_push_front(Deque_MyClass *ap, MyClass obj){
-
+	if(ap->siz == ap->qsiz){
+		//q full
+	}
+	ap->data = new obj; 	
 }
 void Deque_MyClass_pop_back(Deque_MyClass *ap){
 
@@ -101,8 +110,11 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {
 	ptr->pop_front = Deque_MyClass_pop_front;
 	ptr->clear = Deque_MyClass_clear;
 	ptr->siz = 0;
+	ptr->qsz = 4;
+	ptr->head = 0;
+	ptr->tail = 0;
 	//ptr->type_name = "Deque_MyClass";
-	ptr->data = (MyClass *) malloc(sizeof(MyClass));
+	ptr->data = (MyClass *) malloc(sizeof(MyClass) * ptr->qsz);
 }
 
 
