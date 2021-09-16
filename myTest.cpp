@@ -13,6 +13,17 @@ struct MyClass {
     char name[10];
 };
 
+struct Deque_MyClass_Iterator{											   																			   
+	MyClass *cls; 
+	void (*inc)(Deque_MyClass_Iterator *);																			
+	void (*dec)(Deque_MyClass_Iterator *);
+	//DEREF RETURNS MyClass
+	void (*deref)(Deque_MyClass_Iterator *);
+	bool (*equal)(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2); 
+		
+	
+	
+};	
 
 struct Deque_MyClass {                                                         
 	size_t count;
@@ -24,6 +35,8 @@ struct Deque_MyClass {
     MyClass &(*at)(Deque_MyClass *, int i);                                          
 	MyClass &(*front)(Deque_MyClass *);                                          
 	MyClass &(*back)(Deque_MyClass *);                                          
+	Deque_MyClass_Iterator (*begin)(const Deque_MyClass *);
+	Deque_MyClass_Iterator (*end)(const Deque_MyClass *);
     void (*dtor)(Deque_MyClass *);                                            
 	void (*clear)(Deque_MyClass *);
 	void (*push_back)(Deque_MyClass *, MyClass obj);
@@ -32,11 +45,8 @@ struct Deque_MyClass {
 	void (*pop_front)(Deque_MyClass *);
 	size_t &(*size)(Deque_MyClass *);
 	bool (*empty)(Deque_MyClass *);
+	bool (*equal)(Deque_MyClass d1, Deque_MyClass d2);
 };                                                                         
-
-struct Deque_MyClass_Iterator{											   																			   
-																			   
-};																		   
 
 bool
 MyClass_less_by_id(const MyClass &o1, const MyClass &o2) {
@@ -54,6 +64,20 @@ MyClass_print(const MyClass *o) {
     printf("%s\n", o->name);
 }
 
+void Deque_MyClass_Iterator_inc(Deque_MyClass_Iterator *it){
+	it++;
+} 
+void Deque_MyClass_Iterator_dec(Deque_MyClass_Iterator *it){
+	it--;
+}
+//SHOULD RETURN MyClass, switched to void to compile
+void Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
+	//return it;
+	
+}
+bool Deque_MyClass_Iterator_equal(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
+
+}
 
 
 MyClass &Deque_MyClass_at(Deque_MyClass *ap, int i) {                                  
@@ -65,6 +89,18 @@ MyClass &Deque_MyClass_front(Deque_MyClass *ap) {
 MyClass &Deque_MyClass_back(Deque_MyClass *ap) {                                  
 	return ap->data[ap->tail];
 } 
+Deque_MyClass_Iterator Deque_MyClass_begin(const Deque_MyClass *ap){
+	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) &(ap->data);
+	//it->inc = Deque_MyClass_Iterator_inc;
+	//it->dec = Deque_MyClass_Iterator_dec;
+	//it->deref = Deque_MyClass_Iterator_deref;
+	//it->equal = Deque_MyClass_Iterator_equal;
+	return *it;
+}
+Deque_MyClass_Iterator Deque_MyClass_end(const Deque_MyClass *ap){
+	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) &(ap->data[ap->sz-1]);
+	return *it;
+}
 void Deque_MyClass_dtor(Deque_MyClass *ap) {                                   
 	//for(int i = 0; i < ap->sz; i++){
 		free((ap->data));                                                              
@@ -143,15 +179,21 @@ size_t &Deque_MyClass_size(Deque_MyClass *ap){
 bool Deque_MyClass_empty(Deque_MyClass *ap){
 	return ap->count == 0;
 }
+bool Deque_MyClass_equal(Deque_MyClass d1, Deque_MyClass d2){
+
+}
 void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {                                             
 	
     //ptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));               
     ptr->at = &Deque_MyClass_at;                                              
 	ptr->front = &Deque_MyClass_front;
 	ptr->back = &Deque_MyClass_back;
+	ptr->begin = Deque_MyClass_begin;
+	ptr->end = Deque_MyClass_end;
     ptr->dtor = &Deque_MyClass_dtor;                                       
 	ptr->size = &Deque_MyClass_size;
 	ptr->empty = Deque_MyClass_empty;
+	ptr->equal = Deque_MyClass_equal;
 	ptr->push_back = Deque_MyClass_push_back;
 	ptr->push_front = Deque_MyClass_push_front;
 	ptr->pop_back = Deque_MyClass_pop_back;
@@ -164,7 +206,6 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {
 	//ptr->type_name = "Deque_MyClass";
 	ptr->data = (MyClass *) malloc(sizeof(MyClass) * ptr->sz);
 }
-
 
 
 int main() {
@@ -200,12 +241,12 @@ int main() {
         assert(deq.back(&deq).id == 2);
 
         assert(deq.size(&deq) == 3);
-
-        /*for (Deque_MyClass_Iterator it = deq.begin(&deq);
+		
+        for (Deque_MyClass_Iterator it = deq.begin(&deq);
          !Deque_MyClass_Iterator_equal(it, deq.end(&deq)); it.inc(&it)) {
-            MyClass_print(&it.deref(&it));
+            //MyClass_print(&it.deref(&it));
         }
-
+		/*	
         // Multiple iterators?
         for (Deque_MyClass_Iterator it1 = deq.begin(&deq);
          !Deque_MyClass_Iterator_equal(it1, deq.end(&deq)); it1.inc(&it1)) {
