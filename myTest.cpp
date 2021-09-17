@@ -13,12 +13,16 @@ struct MyClass {
     char name[10];
 };
 
+struct Deque_MyClass;
+
 struct Deque_MyClass_Iterator{											   																			   
 	MyClass ptr; 
+	int index;
+	Deque_MyClass *dptr;
 	void (*inc)(Deque_MyClass_Iterator *);																			
 	void (*dec)(Deque_MyClass_Iterator *);
 	//DEREF RETURNS MyClass
-	MyClass (*deref)(Deque_MyClass_Iterator *);
+	MyClass &(*deref)(Deque_MyClass_Iterator *);
 	bool (*equal)(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2);
 	
 };
@@ -30,7 +34,7 @@ struct Deque_MyClass {
 	int sz;
 	int head;
 	int tail;
-	//const char *type_name;
+	char type_name[sizeof("Deque_MyClass")];
 	MyClass &(*at)(Deque_MyClass *, int i);
 	MyClass &(*front)(Deque_MyClass *);
 	MyClass &(*back)(Deque_MyClass *);
@@ -59,13 +63,14 @@ void MyClass_print(const MyClass *o){
 	printf("%s\n", o->name);
 }
 void Deque_MyClass_Iterator_inc(Deque_MyClass_Iterator *it){
+	//it->dptr[index++];
 	it++;
 }
 void Deque_MyClass_Iterator_dec(Deque_MyClass_Iterator *it){
 	it--;
 }	
 	
-MyClass Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
+MyClass &Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
 	return (*it).ptr;	
 }
 bool Deque_MyClass_Iterator_equal(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
@@ -218,10 +223,10 @@ int main() {
         assert(deq.empty(&deq));
 
         // Should print "---- Deque_MyClass, 14".
-        /*printf("---- %s, %d\n", deq.type_name, (int) sizeof(deq.type_name));
+        printf("---- %s, %d\n", deq.type_name, (int) sizeof(deq.type_name));
         // std::cout << "---- " << deq.type_name << ", " << sizeof(deq.type_name) << std::endl;
         assert(sizeof deq.type_name == 14);
-		*/
+		
 
         deq.push_back(&deq, MyClass{1, "Joe"});
         deq.push_back(&deq, MyClass{2, "Mary"});
@@ -243,7 +248,7 @@ int main() {
 		
         for (Deque_MyClass_Iterator it = deq.begin(&deq);
 			!Deque_MyClass_Iterator_equal(it, deq.end(&deq)); it.inc(&it)) {
-            //MyClass_print(&it.deref(&it));
+            MyClass_print(&it.deref(&it));
         }
 		/*	
         // Multiple iterators?
