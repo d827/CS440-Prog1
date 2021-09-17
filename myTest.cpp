@@ -19,9 +19,9 @@ struct Deque_MyClass_Iterator{
 	MyClass ptr; 
 	int index;
 	Deque_MyClass *dptr;
+	//MyClass *dptr;
 	void (*inc)(Deque_MyClass_Iterator *);																			
 	void (*dec)(Deque_MyClass_Iterator *);
-	//DEREF RETURNS MyClass
 	MyClass &(*deref)(Deque_MyClass_Iterator *);
 	bool (*equal)(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2);
 	
@@ -30,7 +30,7 @@ struct Deque_MyClass_Iterator{
 struct Deque_MyClass {
 	size_t count;
 	MyClass *data;
-	Deque_MyClass_Iterator *myIt;
+	//Deque_MyClass_Iterator *myIt;
 	int sz;
 	int head;
 	int tail;
@@ -39,7 +39,7 @@ struct Deque_MyClass {
 	MyClass &(*front)(Deque_MyClass *);
 	MyClass &(*back)(Deque_MyClass *);
 	Deque_MyClass_Iterator &(*begin)(Deque_MyClass *);
-	Deque_MyClass_Iterator (*end)(Deque_MyClass *);
+	Deque_MyClass_Iterator &(*end)(Deque_MyClass *);
 	void (*dtor)(Deque_MyClass *);
 	void (*clear)(Deque_MyClass *);
 	void (*push_back)(Deque_MyClass *, MyClass obj);
@@ -63,8 +63,9 @@ void MyClass_print(const MyClass *o){
 	printf("%s\n", o->name);
 }
 void Deque_MyClass_Iterator_inc(Deque_MyClass_Iterator *it){
-	//it->dptr[index++];
-	it++;
+	//it->dptr = (it->dptr->data)++;
+	it->dptr->data = it->dptr->data + 1;
+	(it->index)++;	
 }
 void Deque_MyClass_Iterator_dec(Deque_MyClass_Iterator *it){
 	it--;
@@ -74,7 +75,7 @@ MyClass &Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
 	return (*it).ptr;	
 }
 bool Deque_MyClass_Iterator_equal(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
-
+	return (it1.dptr->data)==(it2.dptr->data);
 }
 
 
@@ -88,21 +89,47 @@ MyClass &Deque_MyClass_back(Deque_MyClass *ap) {
 	return ap->data[ap->tail];
 } 
 Deque_MyClass_Iterator &Deque_MyClass_begin(Deque_MyClass *ap){
+	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
+	it->index = 0;
+	//it->dptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));
+	//it->dptr = ap;
+	it->dptr = ap;
+	it->ptr = *(ap->data);
+	it->inc = Deque_MyClass_Iterator_inc;
+	it->dec = Deque_MyClass_Iterator_dec;
+	it->deref = Deque_MyClass_Iterator_deref;
+	it->equal = Deque_MyClass_Iterator_equal;
+	return *it;
+	/*
 	ap->myIt->ptr = *(ap->data);
 	ap->myIt->inc = Deque_MyClass_Iterator_inc;
 	ap->myIt->dec = Deque_MyClass_Iterator_dec;
 	ap->myIt->deref = Deque_MyClass_Iterator_deref;
 	ap->myIt->equal = Deque_MyClass_Iterator_equal;
 	return *ap->myIt;
+	*/
 }
-Deque_MyClass_Iterator Deque_MyClass_end(Deque_MyClass *ap){
-	Deque_MyClass_Iterator it;
+Deque_MyClass_Iterator &Deque_MyClass_end(Deque_MyClass *ap){
+	/*Deque_MyClass_Iterator it;
 	it.ptr = (ap->data[ap->sz-1]);
+	it.dptr
 	it.inc = Deque_MyClass_Iterator_inc;
 	it.dec = Deque_MyClass_Iterator_dec;
 	it.deref = Deque_MyClass_Iterator_deref;
 	it.equal = Deque_MyClass_Iterator_equal;
 	return it;
+	*/
+	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
+	it->index = ap->sz-1;
+	//it->dptr = ap;
+	it->dptr = ap + ap->sz-1;
+	it->ptr = (ap->data[ap->sz-1]);
+	it->inc = Deque_MyClass_Iterator_inc;
+	it->dec = Deque_MyClass_Iterator_dec;
+	it->deref = Deque_MyClass_Iterator_deref;
+	it->equal = Deque_MyClass_Iterator_equal;
+	return *it;
+	
 }
 void Deque_MyClass_dtor(Deque_MyClass *ap) {                                   
 	//for(int i = 0; i < ap->sz; i++){
@@ -192,7 +219,7 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {
 	ptr->front = &Deque_MyClass_front;
 	ptr->back = &Deque_MyClass_back;
 	ptr->begin = &Deque_MyClass_begin;
-	ptr->end = Deque_MyClass_end;
+	ptr->end = &Deque_MyClass_end;
     ptr->dtor = &Deque_MyClass_dtor;                                       
 	ptr->size = &Deque_MyClass_size;
 	ptr->empty = Deque_MyClass_empty;
@@ -207,7 +234,7 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {
 	ptr->head = -1;
 	ptr->tail = 0;
 	//ptr->type_name = "Deque_MyClass";
-	ptr->myIt = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
+	//ptr->myIt = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
 	ptr->data = (MyClass *) malloc(sizeof(MyClass) * ptr->sz);
 }
 
