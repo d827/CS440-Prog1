@@ -46,9 +46,11 @@ struct Deque_MyClass {
 	void (*push_front)(Deque_MyClass *, MyClass obj);
 	void (*pop_back)(Deque_MyClass *);
 	void (*pop_front)(Deque_MyClass *);
+	void (*sort)(Deque_MyClass *, Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2);
 	size_t &(*size)(Deque_MyClass *);
 	bool (*empty)(Deque_MyClass *);
 	bool (*equal)(Deque_MyClass d1, Deque_MyClass d2);
+	bool (*cmp)(const MyClass &o1, const MyClass &o2);
 };
 
 bool MyClass_less_by_id(const MyClass &o1, const MyClass &o2){
@@ -86,7 +88,8 @@ void Deque_MyClass_Iterator_dec(Deque_MyClass_Iterator *it){
 }	
 	
 MyClass &Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
-	return (*it).ptr;	
+	//return (*it).ptr;	
+	return it->dptr->data[it->index];
 }
 bool Deque_MyClass_Iterator_equal(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
 	return &(it1.dptr->data[it1.index]) == &(it2.dptr->data[it2.index]);
@@ -159,14 +162,39 @@ void Deque_MyClass_dtor(Deque_MyClass *ap) {
 	//}
 }                                                                          
 void Deque_MyClass_clear(Deque_MyClass *ap){
-
+	ap->count = 0;
+	ap->head = -1;
+	ap->tail = 0;
+	/*for(int i = 0; i < ap->sz; i++){
+		ap->data[i] = 
+	}*/
 }
 void Deque_MyClass_push_back(Deque_MyClass *ap, MyClass obj){
 	if(ap->count == ap->sz){
 		//q full
-		ap->sz = ap->sz * 2;
-		ap->data = (MyClass *) realloc(ap->data, sizeof(MyClass) * ap->sz);
-
+		int tmp = ap->sz;	
+		int newSz = ap->sz * 2;
+		ap->data = (MyClass *) realloc(ap->data, sizeof(MyClass) * newSz);
+		MyClass *toBeCopied = (MyClass *) malloc(sizeof(MyClass) * tmp);
+		Deque_MyClass_Iterator it = ap->begin(ap);	
+		int i = 0;
+		for (it; it.index != ap->tail; it.inc(&it)) {
+            toBeCopied[i] = (it.deref(&it));
+			i++;
+        }
+		toBeCopied[i] = (it.deref(&it));
+		
+		for(int j = 0; j < tmp; j++){
+			ap->data[j] = toBeCopied[j];
+		}
+		//after reordering
+		ap->sz = newSz;	
+		free(toBeCopied);
+		ap->head = 0;
+		ap->tail = tmp;
+		ap->data[ap->tail] = obj;
+		ap->count++;
+		return;
 	}
 	if(ap->tail == ap->sz-1) ap->tail = 0;
 	else{
@@ -183,10 +211,31 @@ void Deque_MyClass_push_back(Deque_MyClass *ap, MyClass obj){
 void Deque_MyClass_push_front(Deque_MyClass *ap, MyClass obj){
 	if(ap->count == ap->sz){
 		//q full
-		ap->sz = ap->sz * 2;
-		ap->data = (MyClass *) realloc(ap->data, sizeof(MyClass) * ap->sz);
-
+		int tmp = ap->sz;	
+		int newSz = ap->sz * 2;
+		ap->data = (MyClass *) realloc(ap->data, sizeof(MyClass) * newSz);
+		MyClass *toBeCopied = (MyClass *) malloc(sizeof(MyClass) * tmp);
+		Deque_MyClass_Iterator it = ap->begin(ap);	
+		int i = 0;
+		for (it; it.index != ap->tail; it.inc(&it)) {
+            toBeCopied[i] = (it.deref(&it));
+			i++;
+        }
+		toBeCopied[i] = (it.deref(&it));
+		
+		for(int j = 0; j < tmp; j++){
+			ap->data[j+1] = toBeCopied[j];
+		}
+		//after reordering
+		ap->sz = newSz;	
+		free(toBeCopied);
+		ap->head = 0;
+		ap->tail = tmp;
+		ap->data[0] = obj;
+		ap->count++;
+		return;
 	}
+
 	if(ap->head == 0) ap->head = ap->sz - 1;
 	else{
 		ap->head--;
@@ -232,9 +281,48 @@ bool Deque_MyClass_empty(Deque_MyClass *ap){
 	return ap->count == 0;
 }
 bool Deque_MyClass_equal(Deque_MyClass d1, Deque_MyClass d2){
+	int flag = 0;	
+	int j = d2.head;
+	int i2;
+	int j2;
+	if(d1.count == d2.count){
+		for (int i = d1.head; i != d1.tail+1; i++) {
+			/*
+			if(i + 1 >= d1.sz) i2 = 0;
+			else{
+				i2 = i + 1;
+			}
+			if(j + 1 >= d2.sz) j2 = 0;
+			else{
+				j2 = j + 1;
+			}
+			*/
+			/*if(i + 1 >= d1.sz) i = 0;
+			else{
+				i = i + 1;
+			}
+			if(j + 1 >= d2.sz) j2 = 0;
+			else{
+				j2 = j + 1;
+			}*/
+
+				
+			//if(!(d1.cmp(d1.at(&d1, i), d1.at(&d1, i2)) == d2.cmp(d2.at(&d2, j), d2.at(&d2, j2)))){
+			if(!(d1.cmp(d1.at(&d1, i), d2.at(&d2, j)) == (d1.cmp(d2.at(&d2, j), d1.at(&d1, i))))){
+				return false;	
+			}
+			if(i+1 >= d1.sz) i = -1;
+			if(j+1 >= d2.sz) j = -1;
+			j++;
+		}
+		return true;
+	}
+	return false;
+}
+void Deque_MyClass_sort(Deque_MyClass *ap, Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
 
 }
-void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {                                             
+void Deque_MyClass_ctor(Deque_MyClass *ptr, bool (*cmpFunc)(const MyClass &o1, const MyClass &o2)) {                                             
 	
     //ptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));               
     ptr->at = &Deque_MyClass_at;                                              
@@ -251,6 +339,8 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool amt) {
 	ptr->pop_back = Deque_MyClass_pop_back;
 	ptr->pop_front = Deque_MyClass_pop_front;
 	ptr->clear = Deque_MyClass_clear;
+	ptr->sort = Deque_MyClass_sort;
+	ptr->cmp = cmpFunc;
 	ptr->count = 0;
 	ptr->sz = 5;
 	ptr->head = -1;
@@ -286,6 +376,7 @@ int main() {
         deq.push_back(&deq, MyClass{3, "Tom"});
         deq.push_front(&deq, MyClass{0, "Mike"});
         deq.push_front(&deq, MyClass{-1, "Mary"});
+		//RESIZE TEST
 
         MyClass_print(&deq.front(&deq));
         MyClass_print(&deq.back(&deq));
@@ -354,11 +445,12 @@ int main() {
             assert(deq.back(&deq).id == 2);
             assert(it.deref(&it).id == 2); // Verify with iterator also.
         }
-		/*
+		
         deq.clear(&deq);
 
         deq.dtor(&deq);
 
+		
 		// Test equality.  Two deques compare equal if they are of the same
         // length and all the elements compare equal.  It is undefined behavior
         // if the two deques were constructed with different comparison
@@ -387,6 +479,47 @@ int main() {
             deq2.dtor(&deq2);
         }
 
-	*/
+	// Test sort with different comparators.
+    {
+        Deque_MyClass sort_by_id, sorted_by_id;
+        Deque_MyClass sort_by_name, sorted_by_name;
+
+        // The two deques below compare on ID only.
+        Deque_MyClass_ctor(&sort_by_id, MyClass_less_by_id);
+        Deque_MyClass_ctor(&sorted_by_id, MyClass_less_by_id);
+        // The two deques below compare on name only.
+        Deque_MyClass_ctor(&sort_by_name, MyClass_less_by_name);
+        Deque_MyClass_ctor(&sorted_by_name, MyClass_less_by_name);
+
+        sort_by_id.push_back(&sort_by_id, MyClass{1, "Mary"});
+        sort_by_id.push_back(&sort_by_id, MyClass{3, "Beth"});
+        sort_by_id.push_back(&sort_by_id, MyClass{2, "Kevin"});
+
+        sorted_by_id.push_back(&sorted_by_id, MyClass{1, "Bob"});
+        sorted_by_id.push_back(&sorted_by_id, MyClass{2, "Alex"});
+        sorted_by_id.push_back(&sorted_by_id, MyClass{3, "Sheldon"});
+
+        sort_by_name.push_back(&sort_by_name, MyClass{9, "Bob"});
+        sort_by_name.push_back(&sort_by_name, MyClass{6, "Sheldon"});
+        sort_by_name.push_back(&sort_by_name, MyClass{2, "Alex"});
+
+        sorted_by_name.push_back(&sorted_by_name, MyClass{2, "Alex"});
+        sorted_by_name.push_back(&sorted_by_name, MyClass{1, "Bob"});
+        sorted_by_name.push_back(&sorted_by_name, MyClass{3, "Sheldon"});
+
+        assert(!Deque_MyClass_equal(sort_by_id, sorted_by_id));
+        sort_by_id.sort(&sort_by_id, sort_by_id.begin(&sort_by_id), sort_by_id.end(&sort_by_id));
+        assert(Deque_MyClass_equal(sort_by_id, sorted_by_id));
+
+        assert(!Deque_MyClass_equal(sort_by_name, sorted_by_name));
+        sort_by_name.sort(&sort_by_name, sort_by_name.begin(&sort_by_name), sort_by_name.end(&sort_by_name));
+        assert(Deque_MyClass_equal(sort_by_name, sorted_by_name));
+
+        sort_by_id.dtor(&sort_by_id);
+        sorted_by_id.dtor(&sorted_by_id);
+        sort_by_name.dtor(&sort_by_name);
+        sorted_by_name.dtor(&sorted_by_name);
+    }
+	
 }
  
