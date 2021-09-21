@@ -19,7 +19,6 @@ struct Deque_MyClass_Iterator{
 	MyClass ptr; 
 	int index;
 	Deque_MyClass *dptr;
-	//MyClass *dptr;
 	void (*inc)(Deque_MyClass_Iterator *);																			
 	void (*dec)(Deque_MyClass_Iterator *);
 	MyClass &(*deref)(Deque_MyClass_Iterator *);
@@ -30,7 +29,6 @@ struct Deque_MyClass_Iterator{
 struct Deque_MyClass {
 	size_t count;
 	MyClass *data;
-	//Deque_MyClass_Iterator *myIt;
 	int sz;
 	int head;
 	int tail;
@@ -47,6 +45,7 @@ struct Deque_MyClass {
 	void (*pop_back)(Deque_MyClass *);
 	void (*pop_front)(Deque_MyClass *);
 	void (*sort)(Deque_MyClass *, Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2);
+	int (*partition)(Deque_MyClass *, int it1, int it2);
 	size_t &(*size)(Deque_MyClass *);
 	bool (*empty)(Deque_MyClass *);
 	bool (*equal)(Deque_MyClass d1, Deque_MyClass d2);
@@ -65,7 +64,6 @@ void MyClass_print(const MyClass *o){
 	printf("%s\n", o->name);
 }
 void Deque_MyClass_Iterator_inc(Deque_MyClass_Iterator *it){
-	//it->dptr = (it->dptr->data)++;
 	if(it->index + 1 >= it->dptr->sz){
 		it->index = 0;
 		it->ptr = it->dptr->data[it->index];
@@ -88,7 +86,6 @@ void Deque_MyClass_Iterator_dec(Deque_MyClass_Iterator *it){
 }	
 	
 MyClass &Deque_MyClass_Iterator_deref(Deque_MyClass_Iterator *it){
-	//return (*it).ptr;	
 	return it->dptr->data[it->index];
 }
 bool Deque_MyClass_Iterator_equal(Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
@@ -116,8 +113,6 @@ MyClass &Deque_MyClass_back(Deque_MyClass *ap) {
 Deque_MyClass_Iterator &Deque_MyClass_begin(Deque_MyClass *ap){
 	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
 	it->index = ap->head;
-	//it->dptr = (Deque_MyClass *) malloc(sizeof(Deque_MyClass));
-	//it->dptr = ap;
 	it->dptr = ap;
 	it->ptr = (ap->data[ap->head]);
 	it->inc = Deque_MyClass_Iterator_inc;
@@ -125,28 +120,10 @@ Deque_MyClass_Iterator &Deque_MyClass_begin(Deque_MyClass *ap){
 	it->deref = &Deque_MyClass_Iterator_deref;
 	it->equal = Deque_MyClass_Iterator_equal;
 	return *it;
-	/*
-	ap->myIt->ptr = *(ap->data);
-	ap->myIt->inc = Deque_MyClass_Iterator_inc;
-	ap->myIt->dec = Deque_MyClass_Iterator_dec;
-	ap->myIt->deref = Deque_MyClass_Iterator_deref;
-	ap->myIt->equal = Deque_MyClass_Iterator_equal;
-	return *ap->myIt;
-	*/
 }
 Deque_MyClass_Iterator &Deque_MyClass_end(Deque_MyClass *ap){
-	/*Deque_MyClass_Iterator it;
-	it.ptr = (ap->data[ap->sz-1]);
-	it.dptr
-	it.inc = Deque_MyClass_Iterator_inc;
-	it.dec = Deque_MyClass_Iterator_dec;
-	it.deref = Deque_MyClass_Iterator_deref;
-	it.equal = Deque_MyClass_Iterator_equal;
-	return it;
-	*/
 	Deque_MyClass_Iterator *it = (Deque_MyClass_Iterator *) malloc(sizeof(Deque_MyClass_Iterator));
 	it->index = ap->tail+1;
-	//it->dptr = ap;
 	it->dptr = ap;
 	it->ptr = (ap->data[ap->tail+1]);
 	it->inc = Deque_MyClass_Iterator_inc;
@@ -157,17 +134,12 @@ Deque_MyClass_Iterator &Deque_MyClass_end(Deque_MyClass *ap){
 	
 }
 void Deque_MyClass_dtor(Deque_MyClass *ap) {                                   
-	//for(int i = 0; i < ap->sz; i++){
-		free((ap->data));                                                              
-	//}
+	free((ap->data));                                                              
 }                                                                          
 void Deque_MyClass_clear(Deque_MyClass *ap){
 	ap->count = 0;
 	ap->head = -1;
 	ap->tail = 0;
-	/*for(int i = 0; i < ap->sz; i++){
-		ap->data[i] = 
-	}*/
 }
 void Deque_MyClass_push_back(Deque_MyClass *ap, MyClass obj){
 	if(ap->count == ap->sz){
@@ -319,8 +291,68 @@ bool Deque_MyClass_equal(Deque_MyClass d1, Deque_MyClass d2){
 	}
 	return false;
 }
-void Deque_MyClass_sort(Deque_MyClass *ap, Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
 
+int Deque_MyClass_partition(Deque_MyClass *ap, int it1, int it2){
+	MyClass pivot = ap->data[it2];
+	MyClass tmp;
+	int i = (it1-1);
+
+	for(int j = it1; j <= it2 - 1; j++){
+		if(ap->cmp(ap->at(ap, j), ap->at(ap, it2))){
+			i++;
+			tmp = ap->data[i];
+			ap->data[i] = ap->data[j];	
+			ap->data[j] = tmp;
+		}
+	}
+	tmp = ap->data[i+1];
+	(ap->data[i+1]) = (ap->data[it2]);	
+	(ap->data[it2]) = tmp;
+
+	return (i+1);
+}
+
+
+void Deque_MyClass_sort(Deque_MyClass *ap, Deque_MyClass_Iterator it1, Deque_MyClass_Iterator it2){
+	//if deque not contiguous
+	if(ap->head > ap->tail){
+		MyClass *toBeCopied = (MyClass *) malloc(sizeof(MyClass) * ap->sz);
+		Deque_MyClass_Iterator it = ap->begin(ap);	
+		int i = 0;
+		for (it; it.index != ap->tail; it.inc(&it)) {
+			toBeCopied[i] = (it.deref(&it));
+			i++;
+		}
+		toBeCopied[i] = (it.deref(&it));
+		
+		for(int j = 0; j < ap->sz; j++){
+			ap->data[j] = toBeCopied[j];
+		}
+		//after reordering
+		free(toBeCopied);
+		//free(it);
+		ap->head = 0;
+		ap->tail = ap->sz-1;
+		it1.index = 0;
+
+	}
+	if(Deque_MyClass_Iterator_equal(it2, ap->end(ap))){
+		it2.ptr = ap->data[ap->tail];
+		it2.index = ap->tail;
+	}
+		
+	if(it1.index < it2.index){
+		int pi = Deque_MyClass_partition(ap, it1.index, it2.index);
+
+		Deque_MyClass_Iterator it3 = it1;
+		Deque_MyClass_Iterator it4 = it2;
+		it3.ptr = ap->data[pi-1];
+		it3.index = pi-1;			
+		it4.ptr = ap->data[pi+1];
+		it4.index = pi+1;
+		Deque_MyClass_sort(ap, it1, it3);
+		Deque_MyClass_sort(ap, it4, it2);
+	}	
 }
 void Deque_MyClass_ctor(Deque_MyClass *ptr, bool (*cmpFunc)(const MyClass &o1, const MyClass &o2)) {                                             
 	
@@ -340,6 +372,7 @@ void Deque_MyClass_ctor(Deque_MyClass *ptr, bool (*cmpFunc)(const MyClass &o1, c
 	ptr->pop_front = Deque_MyClass_pop_front;
 	ptr->clear = Deque_MyClass_clear;
 	ptr->sort = Deque_MyClass_sort;
+	ptr->partition = Deque_MyClass_partition;
 	ptr->cmp = cmpFunc;
 	ptr->count = 0;
 	ptr->sz = 5;
@@ -493,7 +526,11 @@ int main() {
 
         sort_by_id.push_back(&sort_by_id, MyClass{1, "Mary"});
         sort_by_id.push_back(&sort_by_id, MyClass{3, "Beth"});
-        sort_by_id.push_back(&sort_by_id, MyClass{2, "Kevin"});
+		sort_by_id.push_back(&sort_by_id, MyClass{2, "Kevin"});
+		//WRAP CHECK
+		//sort_by_id.push_front(&sort_by_id, MyClass{5, "Five"});
+		//sort_by_id.push_front(&sort_by_id, MyClass{4, "Four"});
+			
 
         sorted_by_id.push_back(&sorted_by_id, MyClass{1, "Bob"});
         sorted_by_id.push_back(&sorted_by_id, MyClass{2, "Alex"});
